@@ -9,6 +9,7 @@ export const sendMessage = async (req, res) => {
       return res.status(400).json({ message: "All fields required" });
     }
 
+    // ✅ Save to DB
     await Contact.create({
       name,
       email,
@@ -17,25 +18,24 @@ export const sendMessage = async (req, res) => {
       message,
     });
 
-    const mailOptions = {
-      from: `"Mahir.dev" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Message received ✅",
+    // ✅ Send email to YOU
+    await transporter.sendMail({
+      from: `"Portfolio Contact" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER,
+      replyTo: email,
+      subject: "New Client Message 🚀",
       html: `
-        <div style="font-family:sans-serif;">
-          <h2>Hey ${name}, 👋</h2>
-          <p>Thanks for reaching out!</p>
-          <p>I’ll get back to you within 24 hours.</p>
-          <hr/>
-          <p>${message}</p>
-        </div>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Project:</strong> ${projectType}</p>
+        <p><strong>Timeline:</strong> ${timeline}</p>
+        <p><strong>Message:</strong> ${message}</p>
       `,
-    };
+    });
 
-    // 🔥 REAL FIX
-    await transporter.sendMail(mailOptions);
-
-    res.status(201).json({ message: "Message sent successfully" });
+    res.status(201).json({
+      message: "Message sent successfully",
+    });
 
   } catch (error) {
     console.error("CONTACT ERROR:", error);
