@@ -1,6 +1,8 @@
 import Admin from "../models/Admin.js";
 import transporter from "../config/mailer.js";
 import jwt from "jsonwebtoken";
+import { resend } from "../config/resend.js";
+
 
 export const sendOTP = async (req, res) => {
   const { email } = req.body;
@@ -19,12 +21,20 @@ export const sendOTP = async (req, res) => {
 
     await admin.save();
 
-    await transporter.sendMail({
-      from: `"Mahir.dev" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Your Admin OTP",
-      text: `Your OTP is ${otp}`,
-    });
+   await resend.emails.send({
+  from: "onboarding@resend.dev",
+  to: email,
+  subject: "Your Admin OTP",
+  html: `
+    <div style="font-family:sans-serif;">
+      <h2>Your OTP</h2>
+      <p>Your OTP is:</p>
+      <h1>${otp}</h1>
+      <p>This OTP is valid for 5 minutes.</p>
+    </div>
+  `,
+});
+ 
 
     res.json({ message: "OTP sent" });
 
