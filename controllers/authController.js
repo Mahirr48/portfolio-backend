@@ -1,5 +1,6 @@
 import Admin from "../models/Admin.js";
-import nodemailer from "nodemailer";
+import transporter from "../config/mailer.js";
+import jwt from "jsonwebtoken";
 
 export const sendOTP = async (req, res) => {
   const { email } = req.body;
@@ -14,21 +15,12 @@ export const sendOTP = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     admin.otp = otp;
-    admin.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 min
+    admin.otpExpiry = Date.now() + 5 * 60 * 1000;
 
     await admin.save();
 
-    // ⚡ Nodemailer setup (use your own email)
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
     await transporter.sendMail({
-      from: process.env.EMAIL,
+      from: `"Mahir.dev" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Your Admin OTP",
       text: `Your OTP is ${otp}`,
@@ -37,13 +29,10 @@ export const sendOTP = async (req, res) => {
     res.json({ message: "OTP sent" });
 
   } catch (err) {
+    console.error("OTP ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
-  
 };
-import jwt from "jsonwebtoken";
-
-
 
 export const verifyOTP = async (req, res) => {
   const { email, otp } = req.body;
@@ -59,7 +48,6 @@ export const verifyOTP = async (req, res) => {
       return res.status(400).json({ message: "OTP expired" });
     }
 
-    // clear OTP after use
     admin.otp = null;
     admin.otpExpiry = null;
     await admin.save();
@@ -67,12 +55,13 @@ export const verifyOTP = async (req, res) => {
     const token = jwt.sign(
       { id: admin._id },
       process.env.JWT_SECRET,
-      { expiresIn: "5m" } // short session (important)
+      { expiresIn: "5m" }
     );
 
     res.json({ token });
 
   } catch (err) {
+    console.error("VERIFY OTP ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
