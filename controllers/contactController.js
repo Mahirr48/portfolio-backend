@@ -1,5 +1,6 @@
 import Contact from "../models/Contact.js";
 import transporter from "../config/mailer.js";
+
 // CREATE MESSAGE
 export const sendMessage = async (req, res) => {
   try {
