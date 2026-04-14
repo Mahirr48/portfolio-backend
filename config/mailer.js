@@ -10,4 +10,13 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// ✅ ADD THIS HERE (NOT in controller)
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("SMTP ERROR:", error);
+  } else {
+    console.log("SMTP READY");
+  }
+});
+
 export default transporter;

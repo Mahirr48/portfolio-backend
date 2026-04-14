@@ -10,7 +10,7 @@ export const sendMessage = async (req, res) => {
     }
 
     // ✅ Save to DB
-    await Contact.create({
+    const newMsg = await Contact.create({
       name,
       email,
       projectType,
@@ -18,7 +18,7 @@ export const sendMessage = async (req, res) => {
       message,
     });
 
-    // ✅ Send email to YOU
+    // ✅ EMAIL TO YOU
     await transporter.sendMail({
       from: `"Portfolio Contact" <${process.env.EMAIL_USER}>`,
       to: process.env.EMAIL_USER,
@@ -33,12 +33,25 @@ export const sendMessage = async (req, res) => {
       `,
     });
 
+    // ✅ AUTO REPLY TO CLIENT (THIS WAS MISSING)
+    await transporter.sendMail({
+      from: `"Mahir.dev" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "I got your message 🚀",
+      html: `
+        <p>Hi ${name},</p>
+        <p>I’ve received your message and will get back to you shortly.</p>
+        <br/>
+        <p>— Mahir</p>
+      `,
+    });
+
     res.status(201).json({
       message: "Message sent successfully",
     });
 
   } catch (error) {
-    console.error("CONTACT ERROR:", error);
+    console.error("CONTACT ERROR FULL:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
